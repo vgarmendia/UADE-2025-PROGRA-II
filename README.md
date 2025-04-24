@@ -39,3 +39,23 @@ Reportes y Análisis
 
 Generar reportes que incluyan, por ejemplo, el número de pacientes pendientes de atención.
 
+Estructura del Proyecto
+El proyecto se organiza de la siguiente manera:
+/src
+/main
+/java
+/com/centroemergencias
+- Main.java
+/modelo
+- Paciente.java
+- Medico.java
+- Urgencia.java
+/tda
+- IColaPrioridad.java
+- IPila.java
+- ColaPrioridad.java
+- Pila.java
+- Nodo.java
+- IVisitante.java
+/servicio
+- GestorEmergencias.java

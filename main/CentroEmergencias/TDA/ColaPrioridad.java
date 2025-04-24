@@ -1,53 +1,82 @@
 package com.centroemergencias.tda;
 
-import com.centroemergencias.modelo.Paciente;
-import com.centroemergencias.modelo.Urgencia;
+public class ColaPrioridad<T> implements IColaPrioridad<T> {
+    private class NodoPrioridad {
+        T elemento;
+        int prioridad;
+        NodoPrioridad siguiente;
 
-public class ColaPrioridad {
-    private Nodo cabeza;
-
-    private class Nodo {
-        Paciente paciente;
-        Nodo siguiente;
-
-        Nodo(Paciente paciente) {
-            this.paciente = paciente;
+        NodoPrioridad(T elemento, int prioridad) {
+            this.elemento = elemento;
+            this.prioridad = prioridad;
+            this.siguiente = null;
         }
     }
+
+    private NodoPrioridad frente;
+    private int tamano;
 
     public ColaPrioridad() {
-        cabeza = null;
+        this.frente = null;
+        this.tamano = 0;
     }
 
-    public boolean isEmpty() {
-        return cabeza == null;
-    }
+    @Override
+    public void encolar(T elemento, int prioridad) {
+        NodoPrioridad nuevoNodo = new NodoPrioridad(elemento, prioridad);
 
-    // Método para insertar en orden de prioridad (ALTA > MEDIA > BAJA)
-    public void acolar(Paciente paciente) {
-        Nodo nuevo = new Nodo(paciente);
-        // Si la cola está vacía o la urgencia del nuevo paciente es mayor que la cabeza
-        if (isEmpty() || paciente.getUrgencia().ordinal() < cabeza.paciente.getUrgencia().ordinal()) {
-            nuevo.siguiente = cabeza;
-            cabeza = nuevo;
+        // Si la cola está vacía o el nuevo elemento tiene mayor prioridad que el frente
+        if (esVacia() || prioridad > frente.prioridad) {
+            nuevoNodo.siguiente = frente;
+            frente = nuevoNodo;
         } else {
-            Nodo actual = cabeza;
-            while (actual.siguiente != null &&
-                    paciente.getUrgencia().ordinal() >= actual.siguiente.paciente.getUrgencia().ordinal()) {
+            // Buscar la posición adecuada según la prioridad
+            NodoPrioridad actual = frente;
+            while (actual.siguiente != null && actual.siguiente.prioridad >= prioridad) {
                 actual = actual.siguiente;
             }
-            nuevo.siguiente = actual.siguiente;
-            actual.siguiente = nuevo;
+            nuevoNodo.siguiente = actual.siguiente;
+            actual.siguiente = nuevoNodo;
         }
+
+        tamano++;
     }
 
-    // Método para retirar el paciente con mayor prioridad
-    public Paciente desacolar() {
-        if (isEmpty()) {
-            return null; // o lanzar una excepción específica
+    @Override
+    public T desencolar() {
+        if (esVacia()) {
+            return null;
         }
-        Paciente pacienteAtendido = cabeza.paciente;
-        cabeza = cabeza.siguiente;
-        return pacienteAtendido;
+
+        T elemento = frente.elemento;
+        frente = frente.siguiente;
+        tamano--;
+
+        return elemento;
+    }
+
+    @Override
+    public T frente() {
+        return esVacia() ? null : frente.elemento;
+    }
+
+    @Override
+    public boolean esVacia() {
+        return frente == null;
+    }
+
+    @Override
+    public int longitud() {
+        return tamano;
+    }
+
+    // Método adicional para recorrer la cola sin modificarla
+    public void mostrarElementos(IVisitante<T> visitante) {
+        NodoPrioridad actual = frente;
+        while (actual != null) {
+            visitante.visitar(actual.elemento);
+            actual = actual.siguiente;
+        }
     }
 }
+

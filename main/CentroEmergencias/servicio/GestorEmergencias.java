@@ -1,62 +1,106 @@
+// GestorEmergencias.java
 package com.centroemergencias.servicio;
 
 import com.centroemergencias.modelo.Medico;
 import com.centroemergencias.modelo.Paciente;
 import com.centroemergencias.tda.ColaPrioridad;
-import java.util.ArrayList;
-import java.util.List;
+import com.centroemergencias.tda.IPila;
+import com.centroemergencias.tda.IVisitante;
+import com.centroemergencias.tda.Pila;
 
 public class GestorEmergencias {
-    private List<Medico> medicos;
-    private ColaPrioridad colaPacientes;
-    private List<Paciente> pacientesAtendidos;
+    private ColaPrioridad<Paciente> pacientesPendientes;
+    private Pila<Medico> medicosDisponibles;
+    private Pila<Paciente> pacientesEnAtencion;
+    private Pila<Paciente> pacientesAtendidos;
 
     public GestorEmergencias() {
-        medicos = new ArrayList<>();
-        colaPacientes = new ColaPrioridad();
-        pacientesAtendidos = new ArrayList<>();
-        // Cargar 10 médicos iniciales
-        for (int i = 1; i <= 10; i++) {
-            medicos.add(new Medico("Medico " + i));
-        }
+        pacientesPendientes = new ColaPrioridad<>();
+        medicosDisponibles = new Pila<>();
+        pacientesEnAtencion = new Pila<>();
+        pacientesAtendidos = new Pila<>();
     }
 
-    // Registro de paciente
     public void registrarPaciente(Paciente paciente) {
-        colaPacientes.acolar(paciente);
+        pacientesPendientes.encolar(paciente, paciente.getUrgencia().getPrioridad());
     }
 
-    // Asignar y atender paciente
-    public void atenderPaciente() {
-        Paciente paciente = colaPacientes.desacolar();
-        if (paciente == null) {
-            System.out.println("No hay pacientes en espera.");
-            return;
-        }
-        // Buscar médico disponible
-        Medico medicoAsignado = null;
-        for (Medico medico : medicos) {
-            if (medico.isDisponible()) {
-                medicoAsignado = medico;
-                break;
-            }
-        }
-        if (medicoAsignado == null) {
-            System.out.println("No hay médicos disponibles en este momento.");
-            // Opcional: Reacolar el paciente o gestionarlo de otra forma.
-            return;
-        }
-        // Asignar el médico y simular la atención
-        medicoAsignado.setDisponible(false);
-        System.out.println("Atendiendo a " + paciente.getNombre() + " con " + medicoAsignado.getNombre());
-        // Simular que finaliza la atención
-        medicoAsignado.setDisponible(true);
-        pacientesAtendidos.add(paciente);
+    public void darDeAltaMedico(Medico medico) {
+        medicosDisponibles.apilar(medico);
     }
 
-    // Reporte de pacientes pendientes
+    public boolean asignarMedicoAPacientePrioritario() {
+        if (pacientesPendientes.esVacia() || medicosDisponibles.esVacia()) {
+            return false;
+        }
+
+        Paciente paciente = pacientesPendientes.desencolar();
+        Medico medico = medicosDisponibles.desapilar();
+
+        // Asignar el médico al paciente
+        paciente.asignarMedico(medico);
+        medico.setDisponible(false);
+
+        // Mover el paciente a la lista de en atención
+        pacientesEnAtencion.apilar(paciente);
+
+        return true;
+    }
+
+    public Paciente atenderPaciente() {
+        if (pacientesEnAtencion.esVacia()) {
+            return null;
+        }
+
+        Paciente paciente = pacientesEnAtencion.desapilar();
+        Medico medico = paciente.getMedicoAsignado();
+
+        // Liberar al médico
+        medico.setDisponible(true);
+        medicosDisponibles.apilar(medico);
+
+        // Registrar el paciente como atendido
+        pacientesAtendidos.apilar(paciente);
+
+        return paciente;
+    }
+
+    public int obtenerNumeroPacientesPendientes() {
+        return pacientesPendientes.longitud();
+    }
+
+    public int obtenerNumeroMedicosDisponibles() {
+        return medicosDisponibles.longitud();
+    }
+
+    public int obtenerNumeroPacientesAtendidos() {
+        return pacientesAtendidos.longitud();
+    }
+
     public void mostrarPacientesPendientes() {
-        System.out.println("Cantidad de pacientes en espera: " + (colaPacientes.isEmpty() ? 0 : "más de 0"));
-        // Aquí podrías implementar un método para contar y mostrar el número exacto
+        pacientesPendientes.mostrarElementos(new IVisitante<Paciente>() {
+            @Override
+            public void visitar(Paciente paciente) {
+                System.out.println(paciente);
+            }
+        });
+    }
+
+    public void mostrarMedicosDisponibles() {
+        medicosDisponibles.mostrarElementos(new IVisitante<Medico>() {
+            @Override
+            public void visitar(Medico medico) {
+                System.out.println(medico);
+            }
+        });
+    }
+
+    public void mostrarPacientesAtendidos() {
+        pacientesAtendidos.mostrarElementos(new IVisitante<Paciente>() {
+            @Override
+            public void visitar(Paciente paciente) {
+                System.out.println(paciente);
+            }
+        });
     }
 }
