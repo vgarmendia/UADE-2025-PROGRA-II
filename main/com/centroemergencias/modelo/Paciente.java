@@ -1,7 +1,5 @@
 package com.centroemergencias.modelo;
 
-package com.centroemergencias.modelo;
-
 public class Paciente {
     private String nombre;
     private Urgencia urgencia;
