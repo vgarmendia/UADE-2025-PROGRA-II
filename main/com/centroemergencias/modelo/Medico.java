@@ -1,38 +1,72 @@
-package com.centroemergencias.modelo;
+//GestorEmergencias.java
 
-public class Medico {
-    private String nombre;
-    private int id;
-    private boolean disponible;
+package servicio;
 
-    public Medico(String nombre, int id) {
-        this.nombre = nombre;
-        this.id = id;
-        this.disponible = true;  // Al crear un médico, está disponible por defecto
+import modelo.*;
+import implementation.dynamic.*;
+import definition.*;
+
+public class GestorEmergencias {
+
+    private PriorityQueueADT pacientes;
+    private SetADT medicosDisponibles;
+    private MultipleDictionaryADT pacientesAtendidos;
+
+    public GestorEmergencias() {
+        pacientes = new DynamicPriorityQueueADT();
+        medicosDisponibles = new DynamicSetADT();
+        pacientesAtendidos = new DynamicMultipleDictionaryADT();
     }
 
-    public String getNombre() {
-        return nombre;
+    public void registrarPaciente(String nombre, Urgencia urgencia) {
+        Paciente paciente = new Paciente(nombre, urgencia);
+        pacientes.add(nombre.hashCode(), urgencia.getPrioridad());
     }
 
-    public int getId() {
-        return id;
+    public void altaMedico(int idMedico) {
+        medicosDisponibles.add(idMedico);
     }
 
-    public boolean isDisponible() {
-        return disponible;
+    public void asignarMedico() {
+        if (pacientes.isEmpty()) {
+            System.out.println("No hay pacientes en espera.");
+            return;
+        }
+        if (medicosDisponibles.isEmpty()) {
+            System.out.println("No hay médicos disponibles.");
+            return;
+        }
+
+        int pacienteId = pacientes.getElement();
+        int medico = ((DynamicSetADT) medicosDisponibles).choose();
+
+        pacientes.remove();
+        medicosDisponibles.remove(medico);
+        pacientesAtendidos.add(medico, pacienteId);
+
+        System.out.println("Médico " + medico + " atiende al paciente ID: " + pacienteId);
     }
 
-    public void setDisponible(boolean disponible) {
-        this.disponible = disponible;
+    public void liberarMedico(int medicoId) {
+        medicosDisponibles.add(medicoId);
     }
 
-    @Override
-    public String toString() {
-        return "Medico{" +
-                "nombre='" + nombre + '\'' +
-                ", id=" + id +
-                ", disponible=" + disponible +
-                '}';
+    public void reportePendientes() {
+        System.out.println("Pacientes pendientes: (no se cuenta size, mostrar hasta que esté vacío)");
+
+        DynamicPriorityQueueADT copia = new DynamicPriorityQueueADT();
+        while (!pacientes.isEmpty()) {
+            int id = pacientes.getElement();
+            int prioridad = pacientes.getPriority();
+            System.out.println("Paciente ID: " + id + ", Prioridad: " + prioridad);
+            copia.add(id, prioridad);
+            pacientes.remove();
+        }
+        while (!copia.isEmpty()) {
+            int id = copia.getElement();
+            int prioridad = copia.getPriority();
+            pacientes.add(id, prioridad);
+            copia.remove();
+        }
     }
 }
