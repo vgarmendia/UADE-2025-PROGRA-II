@@ -1,10 +1,9 @@
-// Urgencia.java
-package com.centroemergencias.modelo;
+//Urgencia.java
+
+package modelo;
 
 public enum Urgencia {
-    ALTA(3),
-    MEDIA(2),
-    BAJA(1);
+    ALTA(1), MEDIA(2), BAJA(3);
 
     private final int prioridad;
 
