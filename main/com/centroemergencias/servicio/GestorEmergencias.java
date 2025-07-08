@@ -1,106 +1,72 @@
-// GestorEmergencias.java
-package com.centroemergencias.servicio;
+//GestorEmergencias.java
 
-import com.centroemergencias.modelo.Medico;
-import com.centroemergencias.modelo.Paciente;
-import com.centroemergencias.tda.ColaPrioridad;
-import com.centroemergencias.tda.IPila;
-import com.centroemergencias.tda.IVisitante;
-import com.centroemergencias.tda.Pila;
+package servicio;
+
+import modelo.*;
+import implementation.dynamic.*;
+import definition.*;
 
 public class GestorEmergencias {
-    private ColaPrioridad<Paciente> pacientesPendientes;
-    private Pila<Medico> medicosDisponibles;
-    private Pila<Paciente> pacientesEnAtencion;
-    private Pila<Paciente> pacientesAtendidos;
+
+    private PriorityQueueADT pacientes;
+    private SetADT medicosDisponibles;
+    private MultipleDictionaryADT pacientesAtendidos;
 
     public GestorEmergencias() {
-        pacientesPendientes = new ColaPrioridad<>();
-        medicosDisponibles = new Pila<>();
-        pacientesEnAtencion = new Pila<>();
-        pacientesAtendidos = new Pila<>();
+        pacientes = new DynamicPriorityQueueADT();
+        medicosDisponibles = new DynamicSetADT();
+        pacientesAtendidos = new DynamicMultipleDictionaryADT();
     }
 
-    public void registrarPaciente(Paciente paciente) {
-        pacientesPendientes.encolar(paciente, paciente.getUrgencia().getPrioridad());
+    public void registrarPaciente(String nombre, Urgencia urgencia) {
+        Paciente paciente = new Paciente(nombre, urgencia);
+        pacientes.add(nombre.hashCode(), urgencia.getPrioridad());
     }
 
-    public void darDeAltaMedico(Medico medico) {
-        medicosDisponibles.apilar(medico);
+    public void altaMedico(int idMedico) {
+        medicosDisponibles.add(idMedico);
     }
 
-    public boolean asignarMedicoAPacientePrioritario() {
-        if (pacientesPendientes.esVacia() || medicosDisponibles.esVacia()) {
-            return false;
+    public void asignarMedico() {
+        if (pacientes.isEmpty()) {
+            System.out.println("No hay pacientes en espera.");
+            return;
+        }
+        if (medicosDisponibles.isEmpty()) {
+            System.out.println("No hay médicos disponibles.");
+            return;
         }
 
-        Paciente paciente = pacientesPendientes.desencolar();
-        Medico medico = medicosDisponibles.desapilar();
+        int pacienteId = pacientes.getElement();
+        int medico = ((DynamicSetADT) medicosDisponibles).choose();
 
-        // Asignar el médico al paciente
-        paciente.asignarMedico(medico);
-        medico.setDisponible(false);
+        pacientes.remove();
+        medicosDisponibles.remove(medico);
+        pacientesAtendidos.add(medico, pacienteId);
 
-        // Mover el paciente a la lista de en atención
-        pacientesEnAtencion.apilar(paciente);
-
-        return true;
+        System.out.println("Médico " + medico + " atiende al paciente ID: " + pacienteId);
     }
 
-    public Paciente atenderPaciente() {
-        if (pacientesEnAtencion.esVacia()) {
-            return null;
+    public void liberarMedico(int medicoId) {
+        medicosDisponibles.add(medicoId);
+    }
+
+    public void reportePendientes() {
+        System.out.println("Pacientes pendientes: (no se cuenta size, mostrar hasta que esté vacío)");
+
+        DynamicPriorityQueueADT copia = new DynamicPriorityQueueADT();
+        while (!pacientes.isEmpty()) {
+            int id = pacientes.getElement();
+            int prioridad = pacientes.getPriority();
+            System.out.println("Paciente ID: " + id + ", Prioridad: " + prioridad);
+            copia.add(id, prioridad);
+            pacientes.remove();
         }
-
-        Paciente paciente = pacientesEnAtencion.desapilar();
-        Medico medico = paciente.getMedicoAsignado();
-
-        // Liberar al médico
-        medico.setDisponible(true);
-        medicosDisponibles.apilar(medico);
-
-        // Registrar el paciente como atendido
-        pacientesAtendidos.apilar(paciente);
-
-        return paciente;
-    }
-
-    public int obtenerNumeroPacientesPendientes() {
-        return pacientesPendientes.longitud();
-    }
-
-    public int obtenerNumeroMedicosDisponibles() {
-        return medicosDisponibles.longitud();
-    }
-
-    public int obtenerNumeroPacientesAtendidos() {
-        return pacientesAtendidos.longitud();
-    }
-
-    public void mostrarPacientesPendientes() {
-        pacientesPendientes.mostrarElementos(new IVisitante<Paciente>() {
-            @Override
-            public void visitar(Paciente paciente) {
-                System.out.println(paciente);
-            }
-        });
-    }
-
-    public void mostrarMedicosDisponibles() {
-        medicosDisponibles.mostrarElementos(new IVisitante<Medico>() {
-            @Override
-            public void visitar(Medico medico) {
-                System.out.println(medico);
-            }
-        });
-    }
-
-    public void mostrarPacientesAtendidos() {
-        pacientesAtendidos.mostrarElementos(new IVisitante<Paciente>() {
-            @Override
-            public void visitar(Paciente paciente) {
-                System.out.println(paciente);
-            }
-        });
+        while (!copia.isEmpty()) {
+            int id = copia.getElement();
+            int prioridad = copia.getPriority();
+            pacientes.add(id, prioridad);
+            copia.remove();
+        }
     }
 }
