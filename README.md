@@ -9,8 +9,6 @@ Valentino Garmendia
 
 Tomás Ricoy
 
-Federico Shaw
-
 Objetivo
 Desarrollar un sistema en Java que permita gestionar la atención de pacientes en un centro de emergencias médicas. El sistema debe registrar pacientes, clasificar su nivel de urgencia, asignar médicos disponibles al paciente de mayor prioridad, atender a los pacientes y generar reportes de la eficiencia operativa. La interacción se realizará a través de la línea de comandos y la información se mantendrá en memoria durante la ejecución.
 
@@ -40,22 +38,3 @@ Reportes y Análisis
 Generar reportes que incluyan, por ejemplo, el número de pacientes pendientes de atención.
 
 Estructura del Proyecto
-El proyecto se organiza de la siguiente manera:
-/src
-/main
-/java
-/com/centroemergencias
-- Main.java
-/modelo
-- Paciente.java
-- Medico.java
-- Urgencia.java
-/tda
-- IColaPrioridad.java
-- IPila.java
-- ColaPrioridad.java
-- Pila.java
-- Nodo.java
-- IVisitante.java
-/servicio
-- GestorEmergencias.java
